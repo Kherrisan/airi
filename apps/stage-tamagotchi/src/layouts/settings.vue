@@ -6,6 +6,8 @@ import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { RouterView, useRoute } from 'vue-router'
 
+import WindowTitleBar from '../components/Window/TitleBar.vue'
+
 const route = useRoute()
 const { t } = useI18n()
 const providersStore = useProvidersStore()
@@ -103,22 +105,30 @@ const routeHeaderMetadata = computed(() => routeHeaderMetadataMap.value[route.pa
 </script>
 
 <template>
-  <div
-    :style="{
-      paddingBottom: 'env(safe-area-inset-bottom, 0px)',
-      paddingTop: 'env(safe-area-inset-top, 0px)',
-      paddingRight: 'env(safe-area-inset-right, 0px)',
-      paddingLeft: 'env(safe-area-inset-left, 0px)',
-    }"
-  >
-    <!-- Content -->
-    <div class="px-3 py-2 md:px-5 md:py-5" flex="~ col" mx-auto max-w-screen-xl>
-      <PageHeader
-        :title="routeHeaderMetadata?.title"
-        :subtitle="routeHeaderMetadata?.subtitle"
-        :disable-back-button="route.path === '/settings'"
-      />
-      <RouterView />
+  <div h-full w-full mt="44px" overflow-y-scroll>
+    <WindowTitleBar
+      :title="routeHeaderMetadata?.title"
+      icon="i-solar:settings-bold"
+    />
+    <div
+      :style="{
+        paddingBottom: 'env(safe-area-inset-bottom, 0px)',
+        paddingTop: 'env(safe-area-inset-top, 0px)',
+        paddingRight: 'env(safe-area-inset-right, 0px)',
+        paddingLeft: 'env(safe-area-inset-left, 0px)',
+      }"
+    >
+      <div h-full w-full px-4 pb-4>
+        <!-- Content -->
+        <div flex="~ col" mx-auto max-w-screen-xl>
+          <PageHeader
+            :title="routeHeaderMetadata?.title"
+            :subtitle="routeHeaderMetadata?.subtitle"
+            :disable-back-button="route.path === '/settings'"
+          />
+          <RouterView />
+        </div>
+      </div>
     </div>
   </div>
 </template>
