@@ -1,20 +1,16 @@
-<img src="./docs/public/readme-image-pc-preview.png">
-
-<p align="center">
-  <picture>
-    <source
-      width="100"
-      srcset="./docs/public/logo-dark.png"
-      media="(prefers-color-scheme: dark)"
-    />
-    <source
-      width="100"
-      srcset="./docs/public/logo-light.png"
-      media="(prefers-color-scheme: light), (prefers-color-scheme: no-preference)"
-    />
-    <img width="250" src="./docs/public/logo-light.png" />
-  </picture>
-</p>
+<picture>
+  <source
+    width="100%"
+    srcset="./docs/public/banner-dark-1280x640.png"
+    media="(prefers-color-scheme: dark)"
+  />
+  <source
+    width="100%"
+    srcset="./docs/public/banner-light-1280x640.png"
+    media="(prefers-color-scheme: light), (prefers-color-scheme: no-preference)"
+  />
+  <img width="250" src="./docs/public/banner-light-1280x640.png" />
+</picture>
 
 <h1 align="center">Project AIRI</h1>
 
@@ -30,6 +26,24 @@
 </p>
 
 > 深受 [Neuro-sama](https://www.youtube.com/@Neurosama) 启发
+
+> [!NOTE]
+>
+> 我们有一个专门的组织 [@proj-airi](https://github.com/proj-airi) 用于所有从 Project AIRI 诞生的子项目，快来看看吧！
+>
+> RAG（检索增强生成）、记忆系统、嵌入式数据库、图标、Live2D 实用工具等等！
+
+# 你是否梦想过拥有一个赛博生命（网络老婆/老公、数字桌宠），或者能与你玩耍和交谈的 AI 伴侣？
+
+借助现代大型语言模型的力量，像是 [ChatGPT](https://chatgpt.com) 和著名的 [Claude](https://claude.ai) 所能带来的，想要 LLM（大语言模型）和我们角色扮演、聊天已经超简单了，每个人都能上手。而像 [Character.ai（又称 c.ai）](https://character.ai) 和 [JanitorAI](https://janitorai.com/) 这样的平台，以及本地应用如 [SillyTavern（又称酒馆）](https://github.com/SillyTavern/SillyTavern)，已经是基于聊天或文字冒险游戏体验的相当不错的解决方案。
+
+> 但是，如何赋予它们玩游戏的能力呢？让它们能看到你正在编写的代码？不仅能一边聊天一边玩游戏，也可以看视频，还能做很多其他事情？
+
+你可能已经知道 [Neuro-sama](https://www.youtube.com/@Neurosama)，她目前是最好的能够玩游戏、聊天并与你和参与者（在VTuber社区中）互动的 AI VTuber / 伴侣，有些人也称这种存在为"数字人"。**可惜的是，她并不开源，当她从直播中下线后，你就无法与她互动了**。
+
+因此，这个项目 AIRI，在这里提供了另一种可能性：**让你轻松拥有自己的数字生命、赛博生命，随时随地**。
+
+## 这个项目有什么特别的呢？
 
 与其他 AI 和 LLM 驱动的 VTuber 开源项目不同，アイリ VTuber 从开始开发的第一天开始就支持多种 Web 技术，涵盖诸如 [WebGPU](https://www.w3.org/TR/webgpu/)、[WebAudio](https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API)、[Web Workers](https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Using_web_workers)、[WebAssembly](https://webassembly.org/)、[WebSocket](https://developer.mozilla.org/en-US/docs/Web/API/WebSocket) 等已经广泛应用或仍在大量实验的 API。
 
@@ -62,6 +76,8 @@
 > **如果你已经感兴趣了，为什么不来这里和大家打个招呼呢？[Would like to join part of us to build AIRI?](https://github.com/moeru-ai/airi/discussions/33)**
 
 ## 当前进度
+
+<img src="./docs/public/readme-image-pc-preview.png">
 
 - [x] 思维能力
   - [x] 玩 [Minecraft](https://www.minecraft.net)
@@ -255,22 +271,6 @@ flowchart TD
   style DB1 fill:#f9f9d4,stroke:#333,stroke-width:1px
   style Memory fill:#f9f9d4,stroke:#333,stroke-width:1px
   style Memory_PGVector fill:#f9f9d4,stroke:#333,stroke-width:1px
-```
-
-```mermaid
-
-%%{ init: { 'flowchart': { 'curve': 'catmullRom' } } }%%
-
-flowchart TD
-  subgraph deploy&bundle
-    direction LR
-    HFUP["hfup"]
-    HF[/"HuggingFace Spaces"\]
-    HFUP -...- UI -...-> HF
-    HFUP -...- whisper-webgpu -...-> HF
-    HFUP -...- moonshine-web -...-> HF
-  end
-
 ```
 
 ## 使用的模型

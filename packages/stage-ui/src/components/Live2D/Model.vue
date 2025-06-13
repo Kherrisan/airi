@@ -22,13 +22,23 @@ const props = withDefaults(defineProps<{
   mouthOpenSize?: number
   width: number
   height: number
-  paused: boolean
+  paused?: boolean
+  focusAt?: { x: number, y: number }
+  disableFocusAt?: boolean
 }>(), {
   mouthOpenSize: 0,
+  paused: false,
+  focusAt: () => ({ x: 0, y: 0 }),
+  disableFocusAt: false,
 })
+
+const emits = defineEmits<{
+  (e: 'modelLoaded'): void
+}>()
 
 const pixiApp = toRef(() => props.app)
 const paused = toRef(() => props.paused)
+const focusAt = toRef(() => props.focusAt)
 const model = ref<Live2DModel>()
 const initialModelWidth = ref<number>(0)
 const initialModelHeight = ref<number>(0)
@@ -58,8 +68,8 @@ function setScale(model: Ref<Live2DModel<InternalModel> | undefined>) {
     offsetFactor = 2.2
   }
 
-  const heightScale = props.height * 0.95 / initialModelHeight.value * offsetFactor
-  const widthScale = props.width * 0.95 / initialModelWidth.value * offsetFactor
+  const heightScale = (props.height * 0.95 / initialModelHeight.value * offsetFactor)
+  const widthScale = (props.width * 0.95 / initialModelWidth.value * offsetFactor)
   const scale = Math.min(heightScale, widthScale)
 
   model.value.scale.set(scale, scale)
@@ -90,10 +100,10 @@ async function loadModel() {
   const modelInstance = new Live2DModel()
 
   if (live2dLoadSource.value === 'file') {
-    await Live2DFactory.setupLive2DModel(modelInstance, [live2dModelFile.value])
+    await Live2DFactory.setupLive2DModel(modelInstance, [live2dModelFile.value], { autoInteract: false })
   }
   else if (live2dLoadSource.value === 'url') {
-    await Live2DFactory.setupLive2DModel(modelInstance, live2dModelUrl.value)
+    await Live2DFactory.setupLive2DModel(modelInstance, live2dModelUrl.value, { autoInteract: false })
   }
 
   model.value = modelInstance
@@ -103,8 +113,6 @@ async function loadModel() {
 
   model.value.x = props.width / 2
   model.value.y = props.height
-  model.value.rotation = Math.PI
-  model.value.skew.x = Math.PI
   model.value.anchor.set(0.5, 0.5)
   setScale(model)
 
@@ -151,6 +159,7 @@ async function loadModel() {
     if (motionManager.state.currentGroup === motionManager.groups.idle) {
       idleEyeFocus.update(internalModel, now)
     }
+
     return true
   }
 
@@ -163,6 +172,7 @@ async function loadModel() {
     await localforage.setItem('live2dModel', live2dModelFile.value)
   }
 
+  emits('modelLoaded')
   loadingLive2dModel.value = false
 }
 
@@ -239,8 +249,15 @@ watch(themeColorsHueDynamic, () => {
 watch(mouthOpenSize, value => getCoreModel().setParameterValueById('ParamMouthOpenY', value))
 watch(pixiApp, initLive2DPixiStage)
 watch(live2dCurrentMotion, value => setMotion(value.group, value.index))
-watch(paused, (value) => {
-  value ? pixiApp.value?.stop() : pixiApp.value?.start()
+watch(paused, value => value ? pixiApp.value?.stop() : pixiApp.value?.start())
+
+watch(focusAt, (value) => {
+  if (!model.value)
+    return
+  if (props.disableFocusAt)
+    return
+
+  model.value.focus(value.x, value.y)
 })
 
 watchDebounced(loadingLive2dModel, (value) => {
@@ -254,6 +271,15 @@ onMounted(updateDropShadowFilter)
 onUnmounted(() => {
   cancelAnimationFrame(dropShadowAnimationId.value)
   model.value && pixiApp.value?.stage.removeChild(model.value)
+})
+
+function listMotionGroups() {
+  return availableLive2dMotions.value
+}
+
+defineExpose({
+  setMotion,
+  listMotionGroups,
 })
 </script>
 

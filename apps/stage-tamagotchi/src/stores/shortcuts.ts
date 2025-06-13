@@ -1,26 +1,115 @@
+import type { ShortcutEvent } from '@tauri-apps/plugin-global-shortcut'
+import type { MaybeRefOrGetter, UseStorageOptions } from '@vueuse/core'
+
 import { useLocalStorage } from '@vueuse/core'
 import { defineStore } from 'pinia'
-import { ref } from 'vue'
+import { ref, toValue, watch } from 'vue'
+
+import { WindowControlMode } from '../types/window-controls'
+import { startClickThrough, stopClickThrough } from '../utils/windows'
+import { useWindowControlStore } from './window-controls'
+
+interface Versioned<T> { version?: string, data?: T }
+interface UseVersionedStorageOptions<T> {
+  defaultVersion?: string
+  satisfiesVersionBy?: (version: string) => boolean
+  onVersionMismatch?: (value: Versioned<T>) => OnVersionMismatchActions<T>
+}
+
+export interface OnVersionMismatchKeep<T> { action: 'keep', data?: T }
+export interface OnVersionMismatchReset<T> { action: 'reset', data?: T }
+export type OnVersionMismatchActions<T> = OnVersionMismatchKeep<T> | OnVersionMismatchReset<T>
+
+function useVersionedLocalStorage<T>(
+  key: MaybeRefOrGetter<string>,
+  initialValue: MaybeRefOrGetter<T>,
+  options?: UseStorageOptions<T> & UseVersionedStorageOptions<T>,
+) {
+  const defaultVersion = options?.defaultVersion || '1.0.0'
+  const data = ref(toValue(initialValue))
+  const rawValue = useLocalStorage<Versioned<T>>(key, { version: defaultVersion, data: toValue(initialValue) }, options as unknown as UseStorageOptions<Versioned<T>>)
+
+  watch(rawValue, (value) => {
+    try {
+      if ('version' in rawValue.value && rawValue.value.version != null) {
+        if (options?.satisfiesVersionBy != null && !options.satisfiesVersionBy(rawValue.value.version)) {
+          if (options.onVersionMismatch != null) {
+            const action = options.onVersionMismatch(rawValue.value)
+            if (action.action === 'reset') {
+              rawValue.value = { version: defaultVersion, data: toValue(initialValue) }
+              data.value = toValue(initialValue)
+            }
+          }
+          else {
+            console.warn(`version ${rawValue.value.version} doesn't satisfy the version ${options.defaultVersion} for key ${key}, will reset the value to default value ${toValue(initialValue)}`)
+            rawValue.value = { version: defaultVersion, data: toValue(initialValue) }
+            data.value = toValue(initialValue)
+          }
+        }
+
+        data.value = rawValue.value.data
+        return
+      }
+
+      console.warn(`property key 'version' wasn't found in the value of key ${key} as ${value}, will keep the current ${toValue(initialValue)}`)
+      rawValue.value = { version: defaultVersion, data: toValue(initialValue) }
+      data.value = toValue(initialValue)
+    }
+    catch (err) {
+      console.warn(`failed to un-marshal Local Storage value, possibly due to incompatible or corrupted for key ${key} value ${value}, falling back to default value ${toValue(initialValue)}`, err)
+      rawValue.value = { version: defaultVersion, data: toValue(initialValue) }
+      data.value = toValue(initialValue)
+    }
+  }, {
+    immediate: true,
+    deep: true,
+  })
+
+  return data
+}
 
 export const useShortcutsStore = defineStore('shortcuts', () => {
+  const windowStore = useWindowControlStore()
+
   const shortcuts = ref([
     {
-      name: 'settings.pages.shortcuts.sections.section.window-controls.fields.field.toggle-move.label',
-      shortcut: useLocalStorage('shortcuts/window/move', 'Ctrl+M'),
+      name: 'settings.pages.themes.window-shortcuts.toggle-move.label',
+      shortcut: useVersionedLocalStorage('shortcuts/window/move', 'Shift+Alt+N'), // Shift + Alt + N
       group: 'window',
       type: 'move',
+      handle: async (event: ShortcutEvent) => {
+        if (event.state !== 'Pressed') {
+          return
+        }
+
+        windowStore.setMode(WindowControlMode.MOVE)
+        windowStore.toggleControl()
+      },
     },
     {
-      name: 'settings.pages.shortcuts.sections.section.window-controls.fields.field.toggle-resize.label',
-      shortcut: useLocalStorage('shortcuts/window/resize', 'Ctrl+R'),
+      name: 'settings.pages.themes.window-shortcuts.toggle-resize.label',
+      shortcut: useVersionedLocalStorage('shortcuts/window/resize', 'Shift+Alt+R'), // Shift + Alt + R
       group: 'window',
       type: 'resize',
+      handle: async (_: ShortcutEvent) => {
+        windowStore.setMode(WindowControlMode.RESIZE)
+        windowStore.toggleControl()
+      },
     },
     {
-      name: 'settings.pages.shortcuts.sections.section.window-controls.fields.field.toggle-ignore-mouse-event.label',
-      shortcut: useLocalStorage('shortcuts/window/debug', 'Ctrl+I'),
+      name: 'settings.pages.themes.window-shortcuts.toggle-ignore-mouse-event.label',
+      shortcut: useVersionedLocalStorage('shortcuts/window/debug', 'Shift+Alt+I'), // Shift + Alt + I
       group: 'window',
-      type: 'debug',
+      type: 'ignore-mouse-event',
+      handle: async (_: ShortcutEvent) => {
+        windowStore.isIgnoringMouseEvent = !windowStore.isIgnoringMouseEvent
+        if (windowStore.isIgnoringMouseEvent) {
+          await startClickThrough()
+          return
+        }
+
+        await stopClickThrough()
+      },
     },
   ])
 

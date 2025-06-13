@@ -3,7 +3,7 @@ import type { ccv3 } from '@proj-airi/ccc'
 
 import { useAiriCardStore } from '@proj-airi/stage-ui/stores'
 import { InputFile } from '@proj-airi/ui'
-import Select from '@proj-airi/ui/components/Form/Select/Select.vue'
+import { Select } from '@proj-airi/ui/components/form'
 import { storeToRefs } from 'pinia'
 import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
@@ -147,7 +147,7 @@ function getModuleShortName(id: string, module: 'consciousness' | 'voice') {
 </script>
 
 <template>
-  <div rounded-xl p-4 flex="~ col gap-4">
+  <div rounded-xl py-4 flex="~ col gap-4">
     <!-- Toolbar with search and filters -->
     <div flex="~ row" flex-wrap items-center justify-between gap-4>
       <!-- Search bar -->

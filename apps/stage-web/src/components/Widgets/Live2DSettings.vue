@@ -108,8 +108,8 @@ const exportObjectUrl = useObjectUrl(live2dModelFile)
 </script>
 
 <template>
-  <div flex="~ col gap-4">
-    <Section title="settings.live2d.change-model.title" icon="i-solar:magic-stick-3-bold-duotone" inner-class="text-sm">
+  <div flex="~ col gap-2">
+    <Section :title="t('settings.live2d.change-model.title')" icon="i-solar:magic-stick-3-bold-duotone" inner-class="text-sm">
       <div flex items-center gap-2>
         <input
           v-model="localModelUrl"
@@ -133,11 +133,11 @@ const exportObjectUrl = useObjectUrl(live2dModelFile)
     </Section>
     <Section
       v-if="settings.live2dLoadSource === 'file'"
-      title="settings.live2d.edit-motion-map.title"
+      :title="t('settings.live2d.edit-motion-map.title')"
       icon="i-solar:face-scan-circle-bold-duotone"
     >
       <div v-for="motion in settings.availableLive2dMotions" :key="motion.fileName" flex items-center justify-between text-sm>
-        <span font-medium>{{ motion.fileName }}</span>
+        <span font-medium font-mono>{{ motion.fileName }}</span>
 
         <div flex gap-2>
           <select v-model="settings.live2dMotionMap[motion.fileName]">

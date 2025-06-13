@@ -8,6 +8,7 @@ import UnoCss from 'unocss/vite'
 import VueMacros from 'unplugin-vue-macros/vite'
 import VueRouter from 'unplugin-vue-router/vite'
 import { defineConfig } from 'vite'
+import VitePluginVueDevTools from 'vite-plugin-vue-devtools'
 import Layouts from 'vite-plugin-vue-layouts'
 
 export default defineConfig({
@@ -22,7 +23,6 @@ export default defineConfig({
     alias: {
       '@proj-airi/stage-ui': resolve(join(import.meta.dirname, '..', '..', 'packages', 'stage-ui', 'src')),
       '@proj-airi/stage-ui/stores': resolve(join(import.meta.dirname, '..', '..', 'packages', 'stage-ui', 'src', 'stores')),
-      '@proj-airi/ui': resolve(join(import.meta.dirname, '..', '..', 'packages', 'ui', 'src')),
     },
   },
   plugins: [
@@ -41,7 +41,7 @@ export default defineConfig({
       routesFolder: 'src/pages',
     }),
 
-    // TODO: Devtools
+    VitePluginVueDevTools(),
 
     // https://github.com/JohnCampionJr/vite-plugin-vue-layouts
     Layouts(),

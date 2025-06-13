@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import { Live2DCanvas, Live2DModel } from '@proj-airi/stage-ui/components'
-import { useElementBounding } from '@vueuse/core'
+import { useElementBounding, useMouse } from '@vueuse/core'
 import { Vibrant } from 'node-vibrant/browser'
 import { ref } from 'vue'
 
+import IconAnimation from '../../../components/IconAnimation.vue'
 import Live2DSettings from '../../../components/Widgets/Live2DSettings.vue'
 import { useIconAnimation } from '../../../composables/useIconAnimation'
 
@@ -40,16 +41,35 @@ const {
   showIconAnimation,
   animationIcon,
 } = useIconAnimation('i-solar:people-nearby-bold-duotone')
+
+const positionCursor = useMouse()
 </script>
 
 <template>
-  <div flex>
-    <div ref="live2dContainerRef" w="50%" h="80vh">
-      <Live2DCanvas v-slot="{ app }" ref="live2dCanvasRef" :width="width" :height="height">
-        <Live2DModel :app="app" :mouth-open-size="0" :width="width" :height="height" :paused="false" />
+  <div flex class="flex-col-reverse sm:flex-row">
+    <div ref="live2dContainerRef" w="100% sm:50%" h="50dvh sm:80dvh">
+      <Live2DCanvas
+        v-slot="{ app }"
+        ref="live2dCanvasRef"
+        :width="width"
+        :height="height"
+        :resolution="2"
+        max-h="100dvh"
+      >
+        <Live2DModel
+          :app="app"
+          :mouth-open-size="0"
+          :width="width"
+          :height="height"
+          :paused="false"
+          :focus-at="{
+            x: positionCursor.x.value,
+            y: positionCursor.y.value,
+          }"
+        />
       </Live2DCanvas>
     </div>
-    <Live2DSettings w="50%" h="80vh" :palette="palette" @extract-colors-from-model="extractColorsFromModel" />
+    <Live2DSettings w="100% sm:50%" h="50dvh sm:80dvh" :palette="palette" @extract-colors-from-model="extractColorsFromModel" />
   </div>
 
   <IconAnimation

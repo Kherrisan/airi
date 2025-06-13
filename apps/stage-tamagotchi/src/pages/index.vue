@@ -3,15 +3,19 @@ import { WidgetStage } from '@proj-airi/stage-ui/components'
 import { useMcpStore } from '@proj-airi/stage-ui/stores'
 import { connectServer } from '@proj-airi/tauri-plugin-mcp'
 import { invoke } from '@tauri-apps/api/core'
+import { listen } from '@tauri-apps/api/event'
+import { platform } from '@tauri-apps/plugin-os'
 import { storeToRefs } from 'pinia'
-import { computed, onMounted } from 'vue'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
 
 import { useWindowShortcuts } from '../composables/window-shortcuts'
 import { useWindowControlStore } from '../stores/window-controls'
 import { WindowControlMode } from '../types/window-controls'
+import { startClickThrough, stopClickThrough } from '../utils/windows'
 
 const windowStore = useWindowControlStore()
 useWindowShortcuts()
+const isCursorInside = ref(false)
 
 const mcpStore = useMcpStore()
 const { connected, serverCmd, serverArgs } = storeToRefs(mcpStore)
@@ -29,6 +33,18 @@ const modeIndicatorClass = computed(() => {
   }
 })
 
+onMounted(async () => {
+  await invoke('start_monitor')
+  await startClickThrough()
+})
+
+onUnmounted(async () => {
+  await stopClickThrough()
+  await invoke('stop_monitor')
+})
+
+const unListenFuncs: (() => void)[] = []
+
 function openSettings() {
   invoke('open_settings_window')
 }
@@ -37,7 +53,49 @@ function openChat() {
   invoke('open_chat_window')
 }
 
+const shouldHideView = computed(() => {
+  return isCursorInside.value && !windowStore.isControlActive && windowStore.isIgnoringMouseEvent
+})
+
+const live2dFocusAt = ref<Point>({ x: window.innerWidth / 2, y: window.innerHeight / 2 })
+
+interface Point {
+  x: number
+  y: number
+}
+
+interface Size {
+  width: number
+  height: number
+}
+
+interface WindowFrame {
+  origin: Point
+  size: Size
+}
+
+function onTauriPositionCursorAndWindowFrameEvent(event: { payload: [Point, WindowFrame] }) {
+  const [mouseLocation, windowFrame] = event.payload
+  isCursorInside.value = mouseLocation.x >= windowFrame.origin.x && mouseLocation.x <= windowFrame.origin.x + windowFrame.size.width && mouseLocation.y >= windowFrame.origin.y && mouseLocation.y <= windowFrame.origin.y + windowFrame.size.height
+
+  if (platform() === 'macos') {
+    live2dFocusAt.value = {
+      x: mouseLocation.x - windowFrame.origin.x,
+      y: windowFrame.size.height - mouseLocation.y + windowFrame.origin.y,
+    }
+    return
+  }
+
+  live2dFocusAt.value = {
+    x: mouseLocation.x - windowFrame.origin.x,
+    y: mouseLocation.y - windowFrame.origin.y,
+  }
+}
+
 onMounted(async () => {
+  // Listen for click-through state changes
+  unListenFuncs.push(await listen('tauri-app:window-click-through:position-cursor-and-window-frame', onTauriPositionCursorAndWindowFrameEvent))
+
   if (connected.value)
     return
   if (!serverCmd.value || !serverArgs.value)
@@ -50,26 +108,46 @@ onMounted(async () => {
     console.error(error)
   }
 })
+
+onUnmounted(() => {
+  unListenFuncs.forEach(fn => fn?.())
+  unListenFuncs.length = 0
+})
+
+if (import.meta.hot) { // For better DX
+  import.meta.hot.on('vite:beforeUpdate', () => {
+    unListenFuncs.forEach(fn => fn?.())
+    unListenFuncs.length = 0
+    invoke('stop_monitor')
+  })
+  import.meta.hot.on('vite:afterUpdate', async () => {
+    if (unListenFuncs.length === 0) {
+      unListenFuncs.push(await listen('tauri-app:window-click-through:position-cursor-and-window-frame', onTauriPositionCursorAndWindowFrameEvent))
+    }
+    invoke('start_monitor')
+  })
+}
 </script>
 
 <template>
   <div
-    :class="[modeIndicatorClass]"
-    relative
+    :class="[modeIndicatorClass, {
+      'op-0': shouldHideView,
+    }]"
     max-h="[100vh]"
     max-w="[100vw]"
-    p="2"
     flex="~ col"
-    z-2
-    h-full
-    overflow-hidden
+    relative z-2 h-full overflow-hidden rounded-xl
+    transition="opacity duration-500 ease-in-out"
   >
     <div relative h-full w-full items-end gap-2 class="view">
-      <WidgetStage h-full w-full flex-1 mb="<md:18" />
+      <WidgetStage h-full w-full flex-1 :focus-at="live2dFocusAt" mb="<md:18" />
       <div
-        absolute bottom-4 left-4 flex gap-1 op-0 transition="opacity duration-250"
-        class="interaction-area"
-        :class="{ 'pointer-events-none': windowStore.isControlActive }"
+        absolute bottom-4 left-4 flex gap-1 op-0 transition="opacity duration-500"
+        :class="{
+          'pointer-events-none': windowStore.isControlActive,
+          'show-on-hover': !windowStore.isIgnoringMouseEvent,
+        }"
       >
         <div
           border="solid 2 primary-100 "
@@ -91,7 +169,6 @@ onMounted(async () => {
         </div>
       </div>
     </div>
-
     <!-- Debug Mode UI -->
     <div v-if="windowStore.controlMode === WindowControlMode.DEBUG" class="debug-controls">
       <!-- Add debug controls here -->
@@ -110,7 +187,7 @@ onMounted(async () => {
       data-tauri-drag-region
       class="drag-region absolute left-0 top-0 z-999 h-full w-full flex items-center justify-center overflow-hidden"
     >
-      <div class="absolute h-32 w-full flex items-center justify-center b-2 b-pink bg-white">
+      <div class="absolute h-32 w-full flex items-center justify-center b-2 b-primary bg-white">
         <div class="wall absolute top-0 h-8" />
         <div data-tauri-drag-region class="absolute left-0 top-0 h-full w-full flex animate-flash animate-duration-5s animate-count-infinite items-center justify-center text-1.5rem text-primary-300 font-bold">
           DRAG HERE TO MOVE
@@ -120,28 +197,29 @@ onMounted(async () => {
     </div>
   </Transition>
   <Transition
-    enter-active-class="transition-opacity duration-250"
-    enter-from-class="opacity-0"
+    enter-active-class="transition-opacity duration-250 ease-in-out"
+    enter-from-class="opacity-50"
     enter-to-class="opacity-100"
-    leave-active-class="transition-opacity duration-250"
+    leave-active-class="transition-opacity duration-250 ease-in-out"
     leave-from-class="opacity-100"
-    leave-to-class="opacity-0"
+    leave-to-class="opacity-50"
   >
     <div
       v-if="windowStore.controlMode === WindowControlMode.RESIZE"
       class="absolute left-0 top-0 z-999 h-full w-full"
     >
-      <div h-full w-full animate-flash animate-duration-2.5s animate-count-infinite b-8 b-pink rounded-2xl />
+      <div h-full w-full animate-flash animate-duration-2.5s animate-count-infinite b-4 b-primary rounded-2xl />
     </div>
   </Transition>
 </template>
 
 <style scoped>
 .view {
+  transition: opacity 0.5s ease-in-out;
+
   &:hover {
-    .interaction-area {
+    .show-on-hover {
       opacity: 1;
-      pointer-events: auto;
     }
   }
 }
