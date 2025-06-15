@@ -1,12 +1,11 @@
 {
   "name": "@proj-airi/font-cjkfonts-allseto",
   "type": "module",
-  "private": true,
-  "description": "A collection of transition animations that used by Project AIRI",
+  "version": "0.6.0",
+  "description": "Essential CSS for cjkfonts 全瀨體",
   "author": {
-    "name": "Moeru AI Project AIRI Team",
-    "email": "airi@moeru.ai",
-    "url": "https://github.com/moeru-ai"
+    "name": "Creators of cjkFonts",
+    "url": "https://cjkfonts.io/"
   },
   "license": "SIL Open Font License",
   "homepage": "https://cjkfonts.io/blog/cjkfonts_allseto",
@@ -22,8 +21,8 @@
     "./files/*.ttf": { "default": "./dist/files/*.ttf" }
   },
   "scripts": {
-    "dev": "pnpm run stub",
-    "stub": "unbuild --stub",
-    "build": "unbuild"
+    "dev": "pnpm run build",
+    "stub": "pnpm run build",
+    "build": "tsdown"
   }
 }

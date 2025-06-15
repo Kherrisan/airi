@@ -15,30 +15,35 @@
     "directory": "packages/ui-loading-screens"
   },
   "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.mjs"
-    }
+    ".": "./src/index.ts",
+    "./components": "./src/components/index.ts",
+    "./*": "./*"
   },
+  "main": "./dist/index.mjs",
+  "module": "./dist/index.mjs",
   "scripts": {
-    "dev": "pnpm run stub",
-    "stub": "unbuild --stub",
-    "build": "unbuild && pnpm run play:build",
+    "dev": "pnpm run build",
+    "stub": "pnpm run build",
+    "build": "tsdown",
     "play:dev": "vite",
     "play:build": "vite build",
     "play:preview": "vite preview",
     "typecheck": "vue-tsc --noEmit"
   },
   "dependencies": {
-    "@vueuse/core": "^13.2.0",
-    "vue": "^3.5.14"
+    "@proj-airi/font-departure-mono": "workspace:^",
+    "@rive-app/canvas-lite": "^2.30.0",
+    "@vueuse/core": "^13.3.0",
+    "@vueuse/motion": "^3.0.3",
+    "vue": "^3.5.16"
   },
   "devDependencies": {
-    "@unocss/reset": "^66.1.2",
+    "@proj-airi/ui": "workspace:^",
+    "@unocss/reset": "^66.2.0",
     "@vitejs/plugin-vue": "^5.2.4",
     "unplugin-vue-router": "^0.12.0",
     "vite-plugin-vue-devtools": "^7.7.6",
     "vue-router": "^4.5.1",
-    "vue-tsc": "^3.0.0-alpha.6"
+    "vue-tsc": "^3.0.0-alpha.10"
   }
 }

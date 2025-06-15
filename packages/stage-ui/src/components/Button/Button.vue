@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
+import { BidirectionalTransition } from '../Misc'
+
 // Define button variants for better type safety and maintainability
 type ButtonVariant = 'primary' | 'secondary' | 'danger'
 
@@ -29,9 +31,9 @@ const isDisabled = computed(() => props.disabled || props.loading)
 
 // Extract variant styles for better organization
 const variantClasses: Record<ButtonVariant, string> = {
-  primary: 'bg-primary-500 hover:bg-primary-600 dark:bg-primary-400 dark:hover:bg-primary-500 text-white',
-  secondary: 'bg-neutral-100 hover:bg-neutral-200 dark:bg-neutral-600 dark:hover:bg-neutral-500 text-neutral-900 dark:text-neutral-100',
-  danger: 'bg-red-500 hover:bg-red-600 dark:bg-red-400 dark:hover:bg-red-500 text-white',
+  primary: 'bg-primary-500 hover:bg-primary-600 dark:bg-primary-400 dark:hover:bg-primary-500 focus:ring-primary-500/50 dark:focus:ring-primary-400/50 text-white',
+  secondary: 'bg-neutral-100 hover:bg-neutral-200 dark:bg-neutral-600 dark:hover:bg-neutral-500 focus:ring-neutral-300/50 dark:focus:ring-neutral-600/50 text-neutral-900 dark:text-neutral-100',
+  danger: 'bg-red-500 hover:bg-red-600 dark:bg-red-400 dark:hover:bg-red-500 focus:ring-red-600/50 dark:focus:ring-red-500/50 text-white',
 }
 
 // Extract size styles for better organization
@@ -50,7 +52,6 @@ const baseClasses = computed(() => [
   variantClasses[props.variant],
   { 'opacity-50 cursor-not-allowed': isDisabled.value },
   'focus:ring-2 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-neutral-900',
-  'focus:ring-primary-500/50 dark:focus:ring-primary-400/50',
 ])
 </script>
 
@@ -59,9 +60,16 @@ const baseClasses = computed(() => [
     :disabled="isDisabled"
     :class="baseClasses"
   >
-    <div class="flex flex-row items-center justify-center gap-2">
-      <div v-if="loading" class="i-lucide:loader-circle animate-spin" />
-      <div v-else-if="icon" :class="icon" />
+    <div class="flex flex-row items-center justify-center">
+      <BidirectionalTransition
+        from-class="opacity-0 mr-0! w-0!"
+        active-class="transition-[width,margin] ease-in-out overflow-hidden"
+      >
+        <div v-if="loading || icon" class="mr-2 w-4">
+          <div v-if="loading" class="i-svg-spinners:ring-resize h-4 w-4" />
+          <div v-else-if="icon" class="h-4 w-4" :class="icon" />
+        </div>
+      </BidirectionalTransition>
       <span v-if="label">{{ label }}</span>
       <slot v-else />
     </div>

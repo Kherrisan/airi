@@ -5,10 +5,13 @@ import { Ticker, TickerPlugin } from '@pixi/ticker'
 import { Live2DModel } from 'pixi-live2d-display/cubism4'
 import { onMounted, onUnmounted, ref, watch } from 'vue'
 
-const props = defineProps<{
+const props = withDefaults(defineProps<{
   width: number
   height: number
-}>()
+  resolution?: number
+}>(), {
+  resolution: 2,
+})
 
 const containerRef = ref<HTMLDivElement>()
 const pixiApp = ref<Application>()
@@ -20,28 +23,39 @@ async function initLive2DPixiStage(parent: HTMLDivElement) {
   extensions.add(TickerPlugin)
 
   pixiApp.value = new Application({
-    width: props.width,
-    height: props.height,
+    width: props.width * props.resolution,
+    height: props.height * props.resolution,
     backgroundAlpha: 0,
     preserveDrawingBuffer: true,
   })
 
   pixiAppCanvas.value = pixiApp.value.view
-  pixiAppCanvas.value.style.objectFit = 'contain'
+
+  // Set CSS styles to make canvas responsive to container
+  pixiAppCanvas.value.style.width = '100%'
+  pixiAppCanvas.value.style.height = '100%'
+  pixiAppCanvas.value.style.objectFit = 'cover'
+  pixiAppCanvas.value.style.display = 'block'
+
   parent.appendChild(pixiApp.value.view)
 }
 
 function handleResize() {
-  if (pixiApp.value)
+  if (pixiApp.value) {
+    // Update the internal rendering resolution
     pixiApp.value.renderer.resize(props.width, props.height)
-
-  if (pixiApp.value?.view) {
-    pixiApp.value.view.width = props.width
-    pixiApp.value.view.height = props.height
   }
+
+  // The CSS styles handle the display size, so we don't need to manually set view dimensions
 }
 
 watch([() => props.width, () => props.height], () => handleResize())
+watch(() => props.resolution, (newScale) => {
+  if (pixiApp.value && newScale) {
+    pixiApp.value.renderer.resolution = newScale
+    handleResize() // Refresh the renderer
+  }
+})
 
 onMounted(async () => containerRef.value && await initLive2DPixiStage(containerRef.value))
 onUnmounted(() => pixiApp.value?.destroy())
@@ -58,8 +72,13 @@ async function captureFrame() {
   return frame
 }
 
+function canvasElement() {
+  return pixiAppCanvas.value
+}
+
 defineExpose({
   captureFrame,
+  canvasElement,
 })
 </script>
 

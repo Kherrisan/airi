@@ -14,6 +14,7 @@ words:
   - APNG
   - astrojs
   - Attributify
+  - attw
   - audioworklet
   - awilix
   - Ayaka
@@ -25,9 +26,9 @@ words:
   - browserbasehq
   - bumpp
   - catppuccin
-  - changelogithub
   - cientos
   - cjkfonts
+  - clippy
   - collectblock
   - composables
   - cooldown
@@ -48,12 +49,14 @@ words:
   - cubismviewmatrix
   - culori
   - cuteen
+  - dataurl
   - deepseek
   - defu
   - demi
   - demodel
   - devlogs
   - dotenvx
+  - dtolnay
   - dtype
   - dtypes
   - duckdb
@@ -120,6 +123,7 @@ words:
   - nuxi
   - nuxt
   - nuxtjs
+  - objc
   - ofetch
   - oklch
   - ollama
@@ -128,6 +132,7 @@ words:
   - onnxruntime
   - openai
   - openrouter
+  - opentype
   - OPFS
   - opusscript
   - pglite
@@ -146,6 +151,7 @@ words:
   - rehype
   - reka
   - rmcp
+  - rolldown
   - rushstack
   - Saccade
   - saccades
@@ -168,6 +174,8 @@ words:
   - taze
   - tolist
   - tresjs
+  - tsdown
+  - unbundle
   - unhead
   - unocss
   - unplugin
@@ -183,6 +191,7 @@ words:
   - wavefile
   - webgpu
   - weeb
+  - wlipsync
   - worklet
   - xast
   - xastscript

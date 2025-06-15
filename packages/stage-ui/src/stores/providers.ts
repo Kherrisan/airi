@@ -1,13 +1,4 @@
-import type {
-  ChatProvider,
-  ChatProviderWithExtraOptions,
-  EmbedProvider,
-  EmbedProviderWithExtraOptions,
-  SpeechProvider,
-  SpeechProviderWithExtraOptions,
-  TranscriptionProvider,
-  TranscriptionProviderWithExtraOptions,
-} from '@xsai-ext/shared-providers'
+import type { ChatProvider, ChatProviderWithExtraOptions, EmbedProvider, EmbedProviderWithExtraOptions, SpeechProvider, SpeechProviderWithExtraOptions, TranscriptionProvider, TranscriptionProviderWithExtraOptions } from '@xsai-ext/shared-providers'
 import type {
   UnAlibabaCloudOptions,
   UnElevenLabsOptions,
@@ -32,7 +23,7 @@ import {
   createWorkersAI,
   createXAI,
 } from '@xsai-ext/providers-cloud'
-import { createOllama } from '@xsai-ext/providers-local'
+import { createOllama, createPlayer2 } from '@xsai-ext/providers-local'
 import { listModels } from '@xsai/model'
 import { defineStore } from 'pinia'
 import {
@@ -49,6 +40,8 @@ import { models as elevenLabsModels } from './providers/elevenlabs/list-models'
 
 export interface ProviderMetadata {
   id: string
+  category: 'chat' | 'embed' | 'speech' | 'transcription'
+  tasks: string[]
   nameKey: string // i18n key for provider name
   name: string // Default name (fallback)
   descriptionKey: string // i18n key for description
@@ -137,6 +130,8 @@ export const useProvidersStore = defineStore('providers', () => {
   const providerMetadata: Record<string, ProviderMetadata> = {
     'openrouter-ai': {
       id: 'openrouter-ai',
+      category: 'chat',
+      tasks: ['text-generation'],
       nameKey: 'settings.pages.providers.provider.openrouter.title',
       name: 'OpenRouter',
       descriptionKey: 'settings.pages.providers.provider.openrouter.description',
@@ -159,6 +154,43 @@ export const useProvidersStore = defineStore('providers', () => {
     },
     'ollama': {
       id: 'ollama',
+      category: 'chat',
+      tasks: ['text-generation'],
+      nameKey: 'settings.pages.providers.provider.ollama.title',
+      name: 'Ollama',
+      descriptionKey: 'settings.pages.providers.provider.ollama.description',
+      description: 'ollama.com',
+      icon: 'i-lobe-icons:ollama',
+      defaultOptions: {
+        baseUrl: 'http://localhost:11434/v1/',
+      },
+      createProvider: config => createOllama((config.baseUrl as string).trim()),
+      capabilities: {
+        listModels: async (config) => {
+          return (await listModels({
+            ...createOllama((config.baseUrl as string).trim()).model(),
+          })).map((model) => {
+            return {
+              id: model.id,
+              name: model.id,
+              provider: 'ollama',
+              description: '',
+              contextLength: 0,
+              deprecated: false,
+            } satisfies ModelInfo
+          })
+        },
+      },
+      validators: {
+        validateProviderConfig: (config) => {
+          return !!config.baseUrl
+        },
+      },
+    },
+    'ollama-embedding': {
+      id: 'ollama-embedding',
+      category: 'embed',
+      tasks: ['text-feature-extraction'],
       nameKey: 'settings.pages.providers.provider.ollama.title',
       name: 'Ollama',
       descriptionKey: 'settings.pages.providers.provider.ollama.description',
@@ -192,6 +224,8 @@ export const useProvidersStore = defineStore('providers', () => {
     },
     'vllm': {
       id: 'vllm',
+      category: 'chat',
+      tasks: ['text-generation'],
       nameKey: 'settings.pages.providers.provider.vllm.title',
       name: 'vLLM',
       descriptionKey: 'settings.pages.providers.provider.vllm.description',
@@ -254,6 +288,43 @@ export const useProvidersStore = defineStore('providers', () => {
     },
     'openai': {
       id: 'openai',
+      category: 'chat',
+      tasks: ['text-generation'],
+      nameKey: 'settings.pages.providers.provider.openai.title',
+      name: 'OpenAI',
+      descriptionKey: 'settings.pages.providers.provider.openai.description',
+      description: 'openai.com',
+      icon: 'i-lobe-icons:openai',
+      defaultOptions: {
+        baseUrl: 'https://api.openai.com/v1/',
+      },
+      createProvider: config => createOpenAI((config.apiKey as string).trim(), (config.baseUrl as string).trim()),
+      capabilities: {
+        listModels: async (config) => {
+          return (await listModels({
+            ...createOpenAI((config.apiKey as string).trim(), (config.baseUrl as string).trim()).model(),
+          })).map((model) => {
+            return {
+              id: model.id,
+              name: model.id,
+              provider: 'openai',
+              description: '',
+              contextLength: 0,
+              deprecated: false,
+            } satisfies ModelInfo
+          })
+        },
+      },
+      validators: {
+        validateProviderConfig: (config) => {
+          return !!config.apiKey && !!config.baseUrl
+        },
+      },
+    },
+    'openai-audio-speech': {
+      id: 'openai-audio-speech',
+      category: 'speech',
+      tasks: ['text-to-speech'],
       nameKey: 'settings.pages.providers.provider.openai.title',
       name: 'OpenAI',
       descriptionKey: 'settings.pages.providers.provider.openai.description',
@@ -287,6 +358,8 @@ export const useProvidersStore = defineStore('providers', () => {
     },
     'anthropic': {
       id: 'anthropic',
+      category: 'chat',
+      tasks: ['text-generation'],
       nameKey: 'settings.pages.providers.provider.anthropic.title',
       name: 'Anthropic',
       descriptionKey: 'settings.pages.providers.provider.anthropic.description',
@@ -358,6 +431,8 @@ export const useProvidersStore = defineStore('providers', () => {
     },
     'google-generative-ai': {
       id: 'google-generative-ai',
+      category: 'chat',
+      tasks: ['text-generation'],
       nameKey: 'settings.pages.providers.provider.google-generative-ai.title',
       name: 'Google Gemini',
       descriptionKey: 'settings.pages.providers.provider.google-generative-ai.description',
@@ -391,6 +466,8 @@ export const useProvidersStore = defineStore('providers', () => {
     },
     'xai': {
       id: 'xai',
+      category: 'chat',
+      tasks: ['text-generation'],
       nameKey: 'settings.pages.providers.provider.xai.title',
       name: 'xAI',
       descriptionKey: 'settings.pages.providers.provider.xai.description',
@@ -420,6 +497,8 @@ export const useProvidersStore = defineStore('providers', () => {
       },
     },
     'deepseek': {
+      category: 'chat',
+      tasks: ['text-generation'],
       id: 'deepseek',
       nameKey: 'settings.pages.providers.provider.deepseek.title',
       name: 'DeepSeek',
@@ -451,6 +530,8 @@ export const useProvidersStore = defineStore('providers', () => {
     },
     'elevenlabs': {
       id: 'elevenlabs',
+      category: 'speech',
+      tasks: ['text-to-speech'],
       nameKey: 'settings.pages.providers.provider.elevenlabs.title',
       name: 'ElevenLabs',
       descriptionKey: 'settings.pages.providers.provider.elevenlabs.description',
@@ -520,6 +601,8 @@ export const useProvidersStore = defineStore('providers', () => {
     },
     'microsoft-speech': {
       id: 'microsoft-speech',
+      category: 'speech',
+      tasks: ['text-to-speech'],
       nameKey: 'settings.pages.providers.provider.microsoft-speech.title',
       name: 'Microsoft / Azure Speech',
       descriptionKey: 'settings.pages.providers.provider.microsoft-speech.description',
@@ -569,6 +652,8 @@ export const useProvidersStore = defineStore('providers', () => {
     },
     'alibaba-cloud-model-studio': {
       id: 'alibaba-cloud-model-studio',
+      category: 'speech',
+      tasks: ['text-to-speech'],
       nameKey: 'settings.pages.providers.provider.alibaba-cloud-model-studio.title',
       name: 'Alibaba Cloud Model Studio',
       descriptionKey: 'settings.pages.providers.provider.alibaba-cloud-model-studio.description',
@@ -626,6 +711,8 @@ export const useProvidersStore = defineStore('providers', () => {
     },
     'volcengine': {
       id: 'volcengine',
+      category: 'speech',
+      tasks: ['text-to-speech'],
       nameKey: 'settings.pages.providers.provider.volcengine.title',
       name: 'settings.pages.providers.provider.volcengine.title',
       descriptionKey: 'settings.pages.providers.provider.volcengine.description',
@@ -675,6 +762,8 @@ export const useProvidersStore = defineStore('providers', () => {
     },
     'together-ai': {
       id: 'together-ai',
+      category: 'chat',
+      tasks: ['text-generation'],
       nameKey: 'settings.pages.providers.provider.together.title',
       name: 'Together.ai',
       descriptionKey: 'settings.pages.providers.provider.together.description',
@@ -705,6 +794,8 @@ export const useProvidersStore = defineStore('providers', () => {
     },
     'novita-ai': {
       id: 'novita-ai',
+      category: 'chat',
+      tasks: ['text-generation'],
       nameKey: 'settings.pages.providers.provider.novita.title',
       name: 'Novita',
       descriptionKey: 'settings.pages.providers.provider.novita.description',
@@ -735,6 +826,8 @@ export const useProvidersStore = defineStore('providers', () => {
     },
     'fireworks-ai': {
       id: 'fireworks-ai',
+      category: 'chat',
+      tasks: ['text-generation'],
       nameKey: 'settings.pages.providers.provider.fireworks.title',
       name: 'Fireworks.ai',
       descriptionKey: 'settings.pages.providers.provider.fireworks.description',
@@ -765,6 +858,8 @@ export const useProvidersStore = defineStore('providers', () => {
     },
     'featherless-ai': {
       id: 'featherless-ai',
+      category: 'chat',
+      tasks: ['text-generation'],
       nameKey: 'settings.pages.providers.provider.featherless.title',
       name: 'Featherless.ai',
       descriptionKey: 'settings.pages.providers.provider.featherless.description',
@@ -796,8 +891,41 @@ export const useProvidersStore = defineStore('providers', () => {
         },
       },
     },
+    'player2-api': {
+      id: 'player2-api',
+      category: 'chat',
+      tasks: ['text-generation'],
+      nameKey: 'settings.pages.providers.provider.player2.title',
+      name: 'Player2 API',
+      descriptionKey: 'settings.pages.providers.provider.player2.description',
+      description: 'player2.game',
+      defaultOptions: {
+        baseUrl: 'http://localhost:4315/v1/',
+      },
+      createProvider: (config) => {
+        return createPlayer2((config.baseUrl as string).trim())
+      },
+      capabilities: {
+        listModels: async () => [
+          {
+            id: 'player2-model',
+            name: 'Player2 Model',
+            provider: 'player2-api',
+          },
+        ],
+      },
+      validators: {
+        validateProviderConfig: (config) => {
+          const url: string = config.baseUrl ? config.baseUrl as string : 'http://localhost:4315/v1/'
+          // checks if health status is there, so it green if and only if you actually have the player2 app running
+          return (fetch(`${url}health`).then(r => r.status === 200).catch(() => false))
+        },
+      },
+    },
     'cloudflare-workers-ai': {
       id: 'cloudflare-workers-ai',
+      category: 'chat',
+      tasks: ['text-generation'],
       nameKey: 'settings.pages.providers.provider.cloudflare-workers-ai.title',
       name: 'Cloudflare Workers AI',
       descriptionKey: 'settings.pages.providers.provider.cloudflare-workers-ai.description',
@@ -817,6 +945,8 @@ export const useProvidersStore = defineStore('providers', () => {
     },
     'perplexity-ai': {
       id: 'perplexity-ai',
+      category: 'chat',
+      tasks: ['text-generation'],
       nameKey: 'settings.pages.providers.provider.perplexity.title',
       name: 'Perplexity',
       descriptionKey: 'settings.pages.providers.provider.perplexity.description',
@@ -875,6 +1005,8 @@ export const useProvidersStore = defineStore('providers', () => {
     },
     'mistral-ai': {
       id: 'mistral-ai',
+      category: 'chat',
+      tasks: ['text-generation'],
       nameKey: 'settings.pages.providers.provider.mistral.title',
       name: 'Mistral',
       descriptionKey: 'settings.pages.providers.provider.mistral.description',
@@ -905,6 +1037,8 @@ export const useProvidersStore = defineStore('providers', () => {
     },
     'moonshot-ai': {
       id: 'moonshot-ai',
+      category: 'chat',
+      tasks: ['text-generation'],
       nameKey: 'settings.pages.providers.provider.moonshot.title',
       name: 'Moonshot AI',
       descriptionKey: 'settings.pages.providers.provider.moonshot.description',
@@ -1095,25 +1229,16 @@ export const useProvidersStore = defineStore('providers', () => {
     return availableProviders.value.map(id => getProviderMetadata(id))
   })
 
-  const availableTextGenerationsProvidersMetadata = computed(() => {
-    return availableProvidersMetadata.value.filter((metadata) => {
-      const provider = getProviderInstance(metadata.id)
-      return 'chat' in provider && typeof provider.chat === 'function'
-    })
+  const allChatProvidersMetadata = computed(() => {
+    return allProvidersMetadata.value.filter(metadata => metadata.category === 'chat')
   })
 
-  const availableAudioTranscriptionProvidersMetadata = computed(() => {
-    return availableProvidersMetadata.value.filter((metadata) => {
-      const provider = getProviderInstance(metadata.id)
-      return 'transcription' in provider && typeof provider.transcription === 'function'
-    })
+  const allAudioSpeechProvidersMetadata = computed(() => {
+    return allProvidersMetadata.value.filter(metadata => metadata.category === 'speech')
   })
 
-  const availableAudioSpeechProvidersMetadata = computed(() => {
-    return availableProvidersMetadata.value.filter((metadata) => {
-      const provider = getProviderInstance(metadata.id)
-      return 'speech' in provider && typeof provider.speech === 'function'
-    })
+  const allAudioTranscriptionProvidersMetadata = computed(() => {
+    return allProvidersMetadata.value.filter(metadata => metadata.category === 'transcription')
   })
 
   function getProviderConfig(providerId: string) {
@@ -1139,8 +1264,8 @@ export const useProvidersStore = defineStore('providers', () => {
     loadModelsForConfiguredProviders,
     getProviderInstance,
     availableProvidersMetadata,
-    availableTextGenerationsProvidersMetadata,
-    availableAudioSpeechProvidersMetadata,
-    availableAudioTranscriptionProvidersMetadata,
+    allChatProvidersMetadata,
+    allAudioSpeechProvidersMetadata,
+    allAudioTranscriptionProvidersMetadata,
   }
 })

@@ -8,7 +8,7 @@ import { RouterLink } from 'vue-router'
 
 const providersStore = useProvidersStore()
 const consciousnessStore = useConsciousnessStore()
-const { availableProviders, availableTextGenerationsProvidersMetadata } = storeToRefs(providersStore)
+const { availableProviders, allChatProvidersMetadata } = storeToRefs(providersStore)
 const {
   activeProvider,
   activeModel,
@@ -57,7 +57,7 @@ function updateCustomModelName(value: string) {
             role="radiogroup"
           >
             <RadioCardSimple
-              v-for="metadata in availableTextGenerationsProvidersMetadata"
+              v-for="metadata in allChatProvidersMetadata"
               :id="metadata.id"
               :key="metadata.id"
               v-model="activeProvider"
@@ -139,7 +139,7 @@ function updateCustomModelName(value: string) {
           <RadioCardManySelect
             v-model="activeModel"
             v-model:search-query="modelSearchQuery"
-            :items="providerModels"
+            :items="providerModels.sort((a, b) => a.id === activeModel ? -1 : b.id === activeModel ? 1 : 0)"
             :searchable="true"
             :search-placeholder="t('settings.pages.modules.consciousness.sections.section.provider-model-selection.search_placeholder')"
             :search-no-results-title="t('settings.pages.modules.consciousness.sections.section.provider-model-selection.no_search_results')"

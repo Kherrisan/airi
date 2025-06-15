@@ -8,18 +8,18 @@ import { parseColor } from 'unocss/preset-mini'
 
 function createColorSchemeConfig(hueOffset = 0) {
   return {
-    DEFAULT: `oklch(62% var(--theme-colors-chroma) calc(var(--theme-colors-hue) + ${hueOffset}))`,
-    50: `color-mix(in srgb, oklch(95% var(--theme-colors-chroma-50) calc(var(--theme-colors-hue) + ${hueOffset})) 30%, oklch(100% 0 360))`,
-    100: `color-mix(in srgb, oklch(95% var(--theme-colors-chroma-100) calc(var(--theme-colors-hue) + ${hueOffset})) 80%, oklch(100% 0 360))`,
-    200: `oklch(90% var(--theme-colors-chroma-200) calc(var(--theme-colors-hue) + ${hueOffset}))`,
-    300: `oklch(85% var(--theme-colors-chroma-300) calc(var(--theme-colors-hue) + ${hueOffset}))`,
-    400: `oklch(74% var(--theme-colors-chroma-400) calc(var(--theme-colors-hue) + ${hueOffset}))`,
-    500: `oklch(62% var(--theme-colors-chroma) calc(var(--theme-colors-hue) + ${hueOffset}))`,
-    600: `oklch(54% var(--theme-colors-chroma-600) calc(var(--theme-colors-hue) + ${hueOffset}))`,
-    700: `oklch(49% var(--theme-colors-chroma-700) calc(var(--theme-colors-hue) + ${hueOffset}))`,
-    800: `oklch(42% var(--theme-colors-chroma-800) calc(var(--theme-colors-hue) + ${hueOffset}))`,
-    900: `oklch(37% var(--theme-colors-chroma-900) calc(var(--theme-colors-hue) + ${hueOffset}))`,
-    950: `oklch(29% var(--theme-colors-chroma-950) calc(var(--theme-colors-hue) + ${hueOffset}))`,
+    DEFAULT: `oklch(62% var(--theme-colors-chroma) calc(var(--theme-colors-hue) + ${hueOffset}) / %alpha)`,
+    50: `color-mix(in srgb, oklch(95% var(--theme-colors-chroma-50) calc(var(--theme-colors-hue) + ${hueOffset}) / %alpha) 30%, oklch(100% 0 360 / %alpha))`,
+    100: `color-mix(in srgb, oklch(95% var(--theme-colors-chroma-100) calc(var(--theme-colors-hue) + ${hueOffset}) / %alpha) 80%, oklch(100% 0 360 / %alpha))`,
+    200: `oklch(90% var(--theme-colors-chroma-200) calc(var(--theme-colors-hue) + ${hueOffset}) / %alpha)`,
+    300: `oklch(85% var(--theme-colors-chroma-300) calc(var(--theme-colors-hue) + ${hueOffset}) / %alpha)`,
+    400: `oklch(74% var(--theme-colors-chroma-400) calc(var(--theme-colors-hue) + ${hueOffset}) / %alpha)`,
+    500: `oklch(62% var(--theme-colors-chroma) calc(var(--theme-colors-hue) + ${hueOffset}) / %alpha)`,
+    600: `oklch(54% var(--theme-colors-chroma-600) calc(var(--theme-colors-hue) + ${hueOffset}) / %alpha)`,
+    700: `oklch(49% var(--theme-colors-chroma-700) calc(var(--theme-colors-hue) + ${hueOffset}) / %alpha)`,
+    800: `oklch(42% var(--theme-colors-chroma-800) calc(var(--theme-colors-hue) + ${hueOffset}) / %alpha)`,
+    900: `oklch(37% var(--theme-colors-chroma-900) calc(var(--theme-colors-hue) + ${hueOffset}) / %alpha)`,
+    950: `oklch(29% var(--theme-colors-chroma-950) calc(var(--theme-colors-hue) + ${hueOffset}) / %alpha)`,
   }
 }
 
@@ -63,22 +63,24 @@ export function sharedUnoConfig() {
       presetTypography(),
       presetWebFonts({
         fonts: {
-          sans: 'DM Sans',
-          serif: 'DM Serif Display',
-          mono: 'DM Mono',
-          cute: 'Kiwi Maru',
-          cuteen: 'Sniglet',
-          jura: 'Jura',
-          gugi: 'Gugi',
-          quicksand: 'Quicksand',
-          quanlai: {
+          'sans': 'DM Sans',
+          'serif': 'DM Serif Display',
+          'mono': 'DM Mono',
+          'cute': 'Kiwi Maru',
+          'cuteen': 'Sniglet',
+          'jura': 'Jura',
+          'gugi': 'Gugi',
+          'quicksand': 'Quicksand',
+          'quanlai': {
             name: 'cjkfonts AllSeto',
             provider: 'none',
           },
-          xiaolai: {
+          'xiaolai': {
             name: 'Xiaolai SC',
             provider: 'none',
           },
+          'urbanist': 'Urbanist',
+          'm-plus-rounded': 'M PLUS Rounded 1c',
         },
         timeouts: {
           warning: 5000,
@@ -101,6 +103,7 @@ export function sharedUnoConfig() {
     ],
     safelist: [
       ...'prose prose-sm m-auto text-left'.split(' '),
+      ...safelistAllPrimaryBackgrounds(),
     ],
     // hyoban/unocss-preset-shadcn: Use shadcn ui with UnoCSS
     // https://github.com/hyoban/unocss-preset-shadcn
@@ -148,9 +151,6 @@ export function histoireUnoConfig() {
   return defineConfig({
     presets: [
       presetStoryMockHover(),
-    ],
-    safelist: [
-      ...safelistAllPrimaryBackgrounds(),
     ],
   })
 }

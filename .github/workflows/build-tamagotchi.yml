@@ -5,6 +5,11 @@ permissions:
 
 on:
   workflow_dispatch:
+    inputs:
+      tag:
+        description: Attach to a specific tag/commit for the release
+        required: true
+        type: string
 
 jobs:
   build-tamagotchi:
@@ -27,16 +32,20 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Get Product Name
+        run: |
+          echo "PRODUCT_NAME=$(jq -r '.productName' apps/stage-tamagotchi/src-tauri/tauri.conf.json)" >> $GITHUB_ENV
+
       - name: Install pnpm
         uses: pnpm/action-setup@v4
         with:
           run_install: false
 
-      - name: Install Node.js 23.x
+      - name: Install Node.js 24.x
         uses: actions/setup-node@v4
         with:
           cache: pnpm
-          node-version: 23.x
+          node-version: 24.x
           # registry-url required. Learn more at
           # https://docs.github.com/en/actions/publishing-packages/publishing-nodejs-packages
           registry-url: https://registry.npmjs.org
@@ -56,7 +65,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Build Dependencies
-        run: pnpm run packages:build
+        run: pnpm run build:packages
 
       - name: Build Application
         run: cd apps/stage-tamagotchi && pnpm tauri build --target ${{ matrix.target }}
@@ -67,5 +76,6 @@ jobs:
       - name: Upload To GitHub Releases
         uses: softprops/action-gh-release@v2
         with:
-          files: apps/stage-tamagotchi/bundle/airi_*
+          files: bundle/${{ env.PRODUCT_NAME }}_*
           append_body: true
+          tag_name: ${{ github.event.inputs.tag }}
